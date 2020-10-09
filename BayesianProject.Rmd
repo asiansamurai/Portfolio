@@ -1,0 +1,87 @@
+---
+header-includes:
+- \usepackage{color}
+- \usepackage[dvipsnames]{xcolor}
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+----
+ Fall 2019: MATH 347 Bayesian Statistics
+---
+```{r}
+install.packages("BayesianTools")
+```
+
+```{r}
+library(BayesianTools)
+citation("BayesianTools")
+```
+
+```{r}
+library(readxl)
+CEsampleProject <- read_excel("CEsampleProject.xlsx")
+```
+
+```{r}
+# set data = your dataset
+y = CEsampleProject$TotalExpLastQ
+
+density = function(par) {
+  # par[1]: mean 
+  # par[2]; precision
+  d1 = dnorm(par[1], mean = 5, sd = 1, log = TRUE)
+  d2 = dgamma(par[2], 3,0.5, log = TRUE )
+  return(d1 + d2)
+}
+
+sampler = function(n=1){
+  d1 = rnorm(n, mean = 5, sd = 1)
+  d2 = runif(n, 1,1)
+  return(cbind(d1,d2))
+}
+
+# create prior 
+prior <- createPrior(density = density, sampler = sampler, lower = c(0, 0), upper = c(5, 1), best = NULL)
+
+#likelihood
+
+ll <- function(par){
+    # par[1]: mean 
+    # par[2]; precision
+    singlelikelihoods = dnorm(y, mean = par[1], sd = 1/(sqrt(par[2])), log = T)
+    return(sum(singlelikelihoods))  
+}
+
+bayesianSetup = createBayesianSetup(likelihood = ll, prior = prior)
+iter = 25000
+```
+
+```{r}
+##MH
+set.seed(123)
+settings <- list(iterations = iter, adapt = F, DRlevels = 1, gibbsProbabilities = NULL, temperingFunction = NULL, optimize = F, message = FALSE)
+out <- runMCMC(bayesianSetup = bayesianSetup, sampler = "Metropolis", settings = settings)
+plot(out)
+summary(out)
+```
+
+```{r}
+##DE
+set.seed(123)
+settings2 <- list(iterations = iter,  message = FALSE)
+out2 <- runMCMC(bayesianSetup = bayesianSetup, sampler = "DE", settings = settings2)
+plot(out2)
+summary(out2)
+```
+
+```{r}
+##DRAM
+set.seed(123)
+settings3 <- list(iterations = iter, adapt = T, DRlevels = 2, gibbsProbabilities = NULL, temperingFunction = NULL, optimize = T,  message = FALSE)
+out3 <- runMCMC(bayesianSetup = bayesianSetup, sampler = "Metropolis", settings = settings3)
+plot(out3)
+summary(out3)
+```
