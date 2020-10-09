@@ -9,7 +9,7 @@ output:
     df_print: paged
 ---
 ----
- Fall 2019: MATH 347 Bayesian Statistics
+ Bayesian Statistics Project
 ---
 ```{r}
 install.packages("BayesianTools")
@@ -58,6 +58,7 @@ ll <- function(par){
 bayesianSetup = createBayesianSetup(likelihood = ll, prior = prior)
 iter = 25000
 ```
+We explore the usage of three different Bayesian methods to see the pros and cons of each.
 
 ```{r}
 ##MH
